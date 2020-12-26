@@ -23,6 +23,7 @@ Shader "Hidden/SlitScanCam"
     sampler2D _Buffer0Tex, _Buffer1Tex, _Buffer2Tex, _Buffer3Tex,
               _Buffer4Tex, _Buffer5Tex, _Buffer6Tex, _Buffer7Tex;
     uint _Index;
+    float _Axis;
 
     void VertexInput(uint vid : SV_VertexID,
                      out float4 pos : SV_Position,
@@ -74,7 +75,7 @@ Shader "Hidden/SlitScanCam"
     float4 FragmentComposite(float4 pos : SV_Position,
                              float2 uv : TEXCOORD0) : SV_Target
     {
-        float select = uv.y * 0x80;
+        float select = lerp(uv.x, uv.y, _Axis) * 0x80;
         uint offset = select;
         float3 p1 = SampleCombined((_Index + offset    ) & 0x7f, uv);
         float3 p2 = SampleCombined((_Index + offset + 1) & 0x7f, uv);

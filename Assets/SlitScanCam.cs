@@ -38,7 +38,7 @@ class SlitScanCam : MonoBehaviour
     void Update()
     {
         if (Input.GetMouseButtonDown(0))
-            _effectType = (_effectType + 1) & 1;
+            _effectType = (_effectType + 1) % 3;
     }
 
     void OnPostRender()
@@ -61,6 +61,7 @@ class SlitScanCam : MonoBehaviour
 
         RenderTexture.active = ac;
         _material.SetInt("_Index", frame);
+        _material.SetFloat("_Axis", _effectType == 0 ? 1 : 0);
         _material.SetTexture("_Buffer0Tex", _buffers[0]);
         _material.SetTexture("_Buffer1Tex", _buffers[1]);
         _material.SetTexture("_Buffer2Tex", _buffers[2]);
@@ -69,7 +70,7 @@ class SlitScanCam : MonoBehaviour
         _material.SetTexture("_Buffer5Tex", _buffers[5]);
         _material.SetTexture("_Buffer6Tex", _buffers[6]);
         _material.SetTexture("_Buffer7Tex", _buffers[7]);
-        _material.SetPass(_effectType + 1);
+        _material.SetPass(_effectType == 2 ? 2 : 1);
         Graphics.DrawProceduralNow(MeshTopology.Triangles, 6, 1);
     }
 }
