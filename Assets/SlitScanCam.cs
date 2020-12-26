@@ -48,6 +48,7 @@ class SlitScanCam : MonoBehaviour
 
         _material.SetTexture("_BufferTex", _buffer);
         _material.SetFloat("_Axis", _effectType == 0 ? 1 : 0);
+        _material.SetFloat("_VFlip", _webcam.videoVerticallyMirrored ? 1 : 0);
         _material.SetInt("_Frame", frame);
         _material.SetPass(_effectType == 2 ? 1 : 0);
         Graphics.DrawProceduralNow(MeshTopology.Triangles, 6, 1);

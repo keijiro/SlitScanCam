@@ -12,12 +12,14 @@ Shader "Hidden/SlitScanCam"
     #define RESOLUTION 256
 
     UNITY_DECLARE_TEX2DARRAY(_BufferTex);
+    float _VFlip;
     float _Axis;
     uint _Frame;
 
     float3 GetHistory(float2 uv, uint offset)
     {
         uint i = (_Frame + RESOLUTION - offset) & (RESOLUTION - 1);
+        uv.y = lerp(uv.y, 1 - uv.y, _VFlip);
         return UNITY_SAMPLE_TEX2DARRAY(_BufferTex, float3(uv, i)).rgb;
     }
 
