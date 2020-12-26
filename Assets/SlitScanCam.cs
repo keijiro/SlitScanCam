@@ -9,6 +9,7 @@ class SlitScanCam : MonoBehaviour
     Material _material;
     RenderTexture[] _buffers;
     WebCamTexture _webcam;
+    int _effectType;
 
     RenderTexture AllocateBuffer(int index)
     {
@@ -32,6 +33,12 @@ class SlitScanCam : MonoBehaviour
 
         _webcam = new WebCamTexture();
         _webcam.Play();
+    }
+
+    void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+            _effectType = (_effectType + 1) & 1;
     }
 
     void OnPostRender()
@@ -62,7 +69,7 @@ class SlitScanCam : MonoBehaviour
         _material.SetTexture("_Buffer5Tex", _buffers[5]);
         _material.SetTexture("_Buffer6Tex", _buffers[6]);
         _material.SetTexture("_Buffer7Tex", _buffers[7]);
-        _material.SetPass(1);
+        _material.SetPass(_effectType + 1);
         Graphics.DrawProceduralNow(MeshTopology.Triangles, 6, 1);
     }
 }

@@ -14,6 +14,8 @@ Shader "Hidden/SlitScanCam"
 
     CGINCLUDE
 
+#include "UnityCG.cginc"
+
     sampler2D _WebCamTex;
     float2 _Offset;
     float _VFlip;
@@ -79,6 +81,27 @@ Shader "Hidden/SlitScanCam"
         return float4(lerp(p1, p2, frac(select)), 1);
     }
 
+    float4 FragmentComposite2(float4 pos : SV_Position,
+                              float2 uv : TEXCOORD0) : SV_Target
+    {
+        float3 acc = 0;
+
+        for (uint i = 0; i < 8; i++)
+        {
+            float hue = i / 8.0;
+            float h = hue * 6 - 2;
+            float3 rgb = saturate(half3(abs(h - 1) - 1, 2 - abs(h), 2 - abs(h - 2)));
+
+            float3 p = SampleCombined((_Index + 0x80 - i * 8) & 0x7f, uv);
+            float lm = Luminance(p);
+            lm = saturate((lm - 0.5) * 10 + 0.5);
+
+            acc += rgb * lm / 5;
+        }
+
+        return float4(acc, 1);
+    }
+
     ENDCG
 
     SubShader
@@ -99,6 +122,15 @@ Shader "Hidden/SlitScanCam"
             CGPROGRAM
             #pragma vertex VertexComposite
             #pragma fragment FragmentComposite
+            ENDCG
+        }
+        Pass
+        {
+            Cull off
+            ZTest Always
+            CGPROGRAM
+            #pragma vertex VertexComposite
+            #pragma fragment FragmentComposite2
             ENDCG
         }
     }
