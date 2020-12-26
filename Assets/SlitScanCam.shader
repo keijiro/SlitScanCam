@@ -1,4 +1,4 @@
-Shader "Hidden/Slitscan"
+Shader "Hidden/SlitScanCam"
 {
     Properties
     {
@@ -16,6 +16,7 @@ Shader "Hidden/Slitscan"
 
     sampler2D _WebCamTex;
     float2 _Offset;
+    float _VFlip;
 
     sampler2D _Buffer0Tex, _Buffer1Tex, _Buffer2Tex, _Buffer3Tex,
               _Buffer4Tex, _Buffer5Tex, _Buffer6Tex, _Buffer7Tex;
@@ -30,9 +31,9 @@ Shader "Hidden/Slitscan"
 
         pos = float4(x, y, 1, 1);
         pos.xy = pos.xy / 2 + _Offset * 2 - 1;
-        pos.y =  - pos.y;
+        pos.y *= -1;
 
-        uv = float2(x, y);
+        uv = float2(x, lerp(y, 1 - y, _VFlip));
     }
 
     float4 FragmentInput(float4 pos : SV_Position,

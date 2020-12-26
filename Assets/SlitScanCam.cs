@@ -1,7 +1,8 @@
 using UnityEngine;
+using System.Collections;
 using System.Linq;
 
-public class Slitscan : MonoBehaviour
+class SlitScanCam : MonoBehaviour
 {
     [SerializeField] Shader _shader = null;
 
@@ -17,8 +18,13 @@ public class Slitscan : MonoBehaviour
         return rt;
     }
 
-    void Start()
+    IEnumerator Start()
     {
+        Application.targetFrameRate = 60;
+
+        yield return
+          Application.RequestUserAuthorization(UserAuthorization.WebCam);
+
         _material = new Material(_shader);
 
         _buffers =
@@ -30,6 +36,8 @@ public class Slitscan : MonoBehaviour
 
     void OnPostRender()
     {
+        if (_webcam == null) return;
+
         var frame = Time.frameCount;
         var index = frame >> 4 & 7;
         var ox = ((frame     ) & 3) / 4.0f;
@@ -38,6 +46,7 @@ public class Slitscan : MonoBehaviour
         var ac = RenderTexture.active;
 
         RenderTexture.active = _buffers[index];
+        _material.SetFloat("_VFlip", _webcam.videoVerticallyMirrored ? 1 : 0);
         _material.SetVector("_Offset", new Vector2(ox, oy));
         _material.SetTexture("_WebCamTex", _webcam);
         _material.SetPass(0);
