@@ -2,10 +2,14 @@ Shader "Hidden/Slitscan"
 {
     Properties
     {
+        _Buffer0Tex("", 2D) = "black" {}
         _Buffer1Tex("", 2D) = "black" {}
         _Buffer2Tex("", 2D) = "black" {}
         _Buffer3Tex("", 2D) = "black" {}
         _Buffer4Tex("", 2D) = "black" {}
+        _Buffer5Tex("", 2D) = "black" {}
+        _Buffer6Tex("", 2D) = "black" {}
+        _Buffer7Tex("", 2D) = "black" {}
     }
 
     CGINCLUDE
@@ -13,10 +17,8 @@ Shader "Hidden/Slitscan"
     sampler2D _WebCamTex;
     float2 _Offset;
 
-    sampler2D _Buffer1Tex;
-    sampler2D _Buffer2Tex;
-    sampler2D _Buffer3Tex;
-    sampler2D _Buffer4Tex;
+    sampler2D _Buffer0Tex, _Buffer1Tex, _Buffer2Tex, _Buffer3Tex,
+              _Buffer4Tex, _Buffer5Tex, _Buffer6Tex, _Buffer7Tex;
     uint _Index;
 
     void VertexInput(uint vid : SV_VertexID,
@@ -50,21 +52,33 @@ Shader "Hidden/Slitscan"
         uv = float2(x, y);
     }
 
-    float4 FragmentComposite(float4 pos : SV_Position,
-                             float2 uv : TEXCOORD0) : SV_Target
+    float3 SampleCombined(uint offset, float2 uv)
     {
-        uint frame = ((uint)(uv.y * 64) + _Index) & 0x3f;
-        uint index = frame >> 4 & 3;
+        uint frame = ((uint)(uv.y * 0x80) + offset) & 0x7f;
+        uint index = frame >> 4 & 7;
         float ox = ((frame     ) & 3) / 4.0f;
         float oy = ((frame >> 2) & 3) / 4.0f;
 
         float2 uv2 = uv / 4 + float2(ox, oy);
 
         return
-            index == 0 ? tex2D(_Buffer1Tex, uv2) :
-            index == 1 ? tex2D(_Buffer2Tex, uv2) :
-            index == 2 ? tex2D(_Buffer3Tex, uv2) :
-                         tex2D(_Buffer4Tex, uv2);
+            index == 0 ? tex2D(_Buffer0Tex, uv2).rgb :
+            index == 1 ? tex2D(_Buffer1Tex, uv2).rgb :
+            index == 2 ? tex2D(_Buffer2Tex, uv2).rgb :
+            index == 3 ? tex2D(_Buffer3Tex, uv2).rgb :
+            index == 4 ? tex2D(_Buffer4Tex, uv2).rgb :
+            index == 5 ? tex2D(_Buffer5Tex, uv2).rgb :
+            index == 6 ? tex2D(_Buffer6Tex, uv2).rgb :
+                         tex2D(_Buffer7Tex, uv2).rgb;
+    }
+
+    float4 FragmentComposite(float4 pos : SV_Position,
+                             float2 uv : TEXCOORD0) : SV_Target
+    {
+        float3 p1 = SampleCombined(_Index    , uv);
+        float3 p2 = SampleCombined(_Index + 1, uv);
+        float blend = frac(uv.y * 0x80);
+        return float4(lerp(p1, p2, blend), 1);
     }
 
     ENDCG

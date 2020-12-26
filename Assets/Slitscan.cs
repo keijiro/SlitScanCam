@@ -1,35 +1,37 @@
 using UnityEngine;
+using System.Linq;
 
 public class Slitscan : MonoBehaviour
 {
     [SerializeField] Shader _shader = null;
 
-    WebCamTexture _webcam;
     Material _material;
     RenderTexture[] _buffers;
+    WebCamTexture _webcam;
 
-    RenderTexture AllocateBuffer()
+    RenderTexture AllocateBuffer(int index)
     {
         var rt = new RenderTexture(4096, 4096, 0, RenderTextureFormat.RGB565);
+        rt.name = $"Buffer{index}";
         rt.Create();
         return rt;
     }
 
     void Start()
     {
-        _webcam = new WebCamTexture();
-        _webcam.Play();
-
         _material = new Material(_shader);
 
-        _buffers = new [] { AllocateBuffer(), AllocateBuffer(),
-                            AllocateBuffer(), AllocateBuffer() };
+        _buffers =
+          Enumerable.Range(0, 8).Select(i => AllocateBuffer(i)).ToArray();
+
+        _webcam = new WebCamTexture();
+        _webcam.Play();
     }
 
     void OnPostRender()
     {
         var frame = Time.frameCount;
-        var index = frame >> 4 & 3;
+        var index = frame >> 4 & 7;
         var ox = ((frame     ) & 3) / 4.0f;
         var oy = ((frame >> 2) & 3) / 4.0f;
 
@@ -39,15 +41,19 @@ public class Slitscan : MonoBehaviour
         _material.SetVector("_Offset", new Vector2(ox, oy));
         _material.SetTexture("_WebCamTex", _webcam);
         _material.SetPass(0);
-        Graphics.DrawProceduralNow(MeshTopology.Triangles, 6, 3);
+        Graphics.DrawProceduralNow(MeshTopology.Triangles, 6, 1);
 
         RenderTexture.active = ac;
         _material.SetInt("_Index", frame);
-        _material.SetTexture("_Buffer1Tex", _buffers[0]);
-        _material.SetTexture("_Buffer2Tex", _buffers[1]);
-        _material.SetTexture("_Buffer3Tex", _buffers[2]);
-        _material.SetTexture("_Buffer4Tex", _buffers[3]);
+        _material.SetTexture("_Buffer0Tex", _buffers[0]);
+        _material.SetTexture("_Buffer1Tex", _buffers[1]);
+        _material.SetTexture("_Buffer2Tex", _buffers[2]);
+        _material.SetTexture("_Buffer3Tex", _buffers[3]);
+        _material.SetTexture("_Buffer4Tex", _buffers[4]);
+        _material.SetTexture("_Buffer5Tex", _buffers[5]);
+        _material.SetTexture("_Buffer6Tex", _buffers[6]);
+        _material.SetTexture("_Buffer7Tex", _buffers[7]);
         _material.SetPass(1);
-        Graphics.DrawProceduralNow(MeshTopology.Triangles, 6, 3);
+        Graphics.DrawProceduralNow(MeshTopology.Triangles, 6, 1);
     }
 }
