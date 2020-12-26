@@ -53,33 +53,30 @@ Shader "Hidden/SlitScanCam"
         uv = float2(x, y);
     }
 
-    float3 SampleCombined(uint offset, float2 uv)
+    float3 SampleCombined(uint frame, float2 uv)
     {
-        uint frame = ((uint)(uv.y * 0x80) + offset) & 0x7f;
+        uv.x += frame      & 3;
+        uv.y += frame >> 2 & 3;
+        uv /= 4;
         uint index = frame >> 4 & 7;
-        float ox = ((frame     ) & 3) / 4.0f;
-        float oy = ((frame >> 2) & 3) / 4.0f;
-
-        float2 uv2 = uv / 4 + float2(ox, oy);
-
-        return
-            index == 0 ? tex2D(_Buffer0Tex, uv2).rgb :
-            index == 1 ? tex2D(_Buffer1Tex, uv2).rgb :
-            index == 2 ? tex2D(_Buffer2Tex, uv2).rgb :
-            index == 3 ? tex2D(_Buffer3Tex, uv2).rgb :
-            index == 4 ? tex2D(_Buffer4Tex, uv2).rgb :
-            index == 5 ? tex2D(_Buffer5Tex, uv2).rgb :
-            index == 6 ? tex2D(_Buffer6Tex, uv2).rgb :
-                         tex2D(_Buffer7Tex, uv2).rgb;
+        return index == 0 ? tex2D(_Buffer0Tex, uv).rgb :
+               index == 1 ? tex2D(_Buffer1Tex, uv).rgb :
+               index == 2 ? tex2D(_Buffer2Tex, uv).rgb :
+               index == 3 ? tex2D(_Buffer3Tex, uv).rgb :
+               index == 4 ? tex2D(_Buffer4Tex, uv).rgb :
+               index == 5 ? tex2D(_Buffer5Tex, uv).rgb :
+               index == 6 ? tex2D(_Buffer6Tex, uv).rgb :
+                            tex2D(_Buffer7Tex, uv).rgb;
     }
 
     float4 FragmentComposite(float4 pos : SV_Position,
                              float2 uv : TEXCOORD0) : SV_Target
     {
-        float3 p1 = SampleCombined(_Index    , uv);
-        float3 p2 = SampleCombined(_Index + 1, uv);
-        float blend = frac(uv.y * 0x80);
-        return float4(lerp(p1, p2, blend), 1);
+        float select = uv.y * 0x80;
+        uint offset = select;
+        float3 p1 = SampleCombined((_Index + offset    ) & 0x7f, uv);
+        float3 p2 = SampleCombined((_Index + offset + 1) & 0x7f, uv);
+        return float4(lerp(p1, p2, frac(select)), 1);
     }
 
     ENDCG
